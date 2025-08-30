@@ -39,33 +39,7 @@ The migration replaces three NVIDIA NIM services with DataRobot deployments:
 
 ### 2. Configure Environment Variables
 
-Create a `.env` file with your DataRobot configuration:
-
-```bash
-# DataRobot Configuration
-DATAROBOT_API_TOKEN=your_api_token_here
-DATAROBOT_ENDPOINT=https://app.datarobot.com
-DATAROBOT_LLM_DEPLOYMENT_ID=your_llm_deployment_id
-DATAROBOT_EMBEDDING_DEPLOYMENT_ID=your_embedding_deployment_id
-DATAROBOT_RERANK_DEPLOYMENT_ID=your_rerank_deployment_id
-
-# Model Names (should match your DataRobot deployments)
-LLM_MODEL_NAME=your_llm_model_name
-EMBEDDING_MODEL_NAME=your_embedding_model_name
-RERANK_MODEL_NAME=your_rerank_model_name
-
-# Engine Configuration
-LLM_MODEL_ENGINE=datarobot
-EMBEDDING_MODEL_ENGINE=datarobot
-RANKING_MODEL_ENGINE=datarobot
-```
-
-### 3. Docker Compose Deployment
-
-This step involves **both editing a file AND running terminal commands**.
-
-#### **Step 3a: Create Environment File**
-**Action**: Create and edit a `.env` file
+**Action**: Create and edit a `.env` file with your DataRobot configuration
 
 ```bash
 # Navigate to your project directory
@@ -113,12 +87,23 @@ RANKING_MODEL_ENGINE=datarobot
 
 **Important**: Replace all the `your_actual_*` values with your real DataRobot credentials and deployment IDs.
 
-#### **Step 3b: Run Docker Compose Command**
-**Action**: Run this terminal command
+### 3. Docker Compose Deployment
+
+**Action**: Run the Docker Compose command to start services
+
+**Prerequisite**: You should have already created your `.env` file in Step 2 above.
 
 ```bash
 # Start the services with DataRobot configuration
 docker compose -f deploy/compose/docker-compose.yaml -f deploy/compose/docker-compose-datarobot.yaml --env-file .env up -d
+```
+
+**What this command does**:
+- Uses the base `docker-compose.yaml` file
+- Overrides with DataRobot-specific settings from `docker-compose-datarobot.yaml`
+- Loads your DataRobot credentials from the `.env` file (created in Step 2)
+- Starts all services in the background (`-d` flag)
+- The NVIDIA NIM services will NOT be started (only DataRobot endpoints used)
 ```
 
 **What this command does**:
