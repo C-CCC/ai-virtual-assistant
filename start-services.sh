@@ -13,6 +13,10 @@ export PYTHONPATH="${PWD}/src:${PYTHONPATH}"
 
 echo "Python path set to: $PYTHONPATH"
 
+# Store the project root directory
+PROJECT_ROOT="$(pwd)"
+echo "Project root: $PROJECT_ROOT"
+
 # Function to start a service
 start_service() {
     local service_name=$1
@@ -22,8 +26,11 @@ start_service() {
     
     echo "Starting $service_name on port $port..."
     
-    # Change to project root directory first
-    cd "$(dirname "$0")"
+    # Always work from project root
+    cd "$PROJECT_ROOT"
+    
+    # Create logs directory if it doesn't exist
+    mkdir -p logs
     
     # Start the service from the project root with correct Python path
     nohup python3 -m "$service_dir.$service_file" > "logs/${service_name}.log" 2>&1 &
@@ -58,9 +65,9 @@ mkdir -p logs
 echo "Stopping any existing services..."
 ./stop-services.sh 2>/dev/null || true
 
-# Start services with proper module paths
-start_service "agent-services" "agent" "main" "8000"
-start_service "analytics-services" "analytics" "main" "8001"
+# Start services with proper module paths - use server.py files
+start_service "agent-services" "agent" "server" "8000"
+start_service "analytics-services" "analytics" "server" "8001"
 start_service "retriever-canonical" "retrievers" "server" "8003"
 start_service "retriever-structured" "retrievers" "server" "8004"
 
