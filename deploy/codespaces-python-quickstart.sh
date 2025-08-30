@@ -43,6 +43,15 @@ check_python() {
     echo -e "${GREEN}✅ Python environment check passed${NC}"
     echo -e "  Python version: $(python3 --version)"
     echo -e "  Pip version: $(pip3 --version)"
+    
+    # Check for virtual environment
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        echo -e "  Virtual environment: ${YELLOW}$VIRTUAL_ENV${NC}"
+        echo -e "  Python executable: ${YELLOW}$(which python3)${NC}"
+    else
+        echo -e "  Virtual environment: ${BLUE}None detected${NC}"
+        echo -e "  Python executable: ${BLUE}$(which python3)${NC}"
+    fi
 }
 
 # Get DataRobot configuration
@@ -118,15 +127,25 @@ install_dependencies() {
     echo ""
     echo -e "${BLUE}Installing Python dependencies...${NC}"
     
+    # Check if we're in a virtual environment
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        echo -e "${YELLOW}Detected virtual environment: $VIRTUAL_ENV${NC}"
+        echo -e "${YELLOW}Installing to virtual environment (no --user flag needed)${NC}"
+        PIP_FLAGS=""
+    else
+        echo -e "${YELLOW}Installing to user directory (--user flag)${NC}"
+        PIP_FLAGS="--user"
+    fi
+    
     echo -e "${YELLOW}Installing agent service dependencies...${NC}"
-    pip3 install --user -r src/agent/requirements.txt
+    pip3 install $PIP_FLAGS -r src/agent/requirements.txt
     
     echo -e "${YELLOW}Installing analytics service dependencies...${NC}"
-    pip3 install --user -r src/analytics/requirements.txt
+    pip3 install $PIP_FLAGS -r src/analytics/requirements.txt
     
     echo -e "${YELLOW}Installing retriever dependencies...${NC}"
-    pip3 install --user -r src/retrievers/unstructured_data/requirements.txt
-    pip3 install --user -r src/retrievers/structured_data/requirements.txt
+    pip3 install $PIP_FLAGS -r src/retrievers/unstructured_data/requirements.txt
+    pip3 install $PIP_FLAGS -r src/retrievers/structured_data/requirements.txt
     
     echo -e "${GREEN}✅ All dependencies installed${NC}"
 }
