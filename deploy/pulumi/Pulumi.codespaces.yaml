@@ -1,0 +1,38 @@
+config:
+  ai-virtual-assistant-datarobot:datarobot:
+    api_token: "${DATAROBOT_API_TOKEN}"
+    endpoint: "${DATAROBOT_ENDPOINT}"
+    deployments:
+      llm:
+        id: "${DATAROBOT_LLM_DEPLOYMENT_ID}"
+        model_name: "${DATAROBOT_LLM_MODEL_NAME}"
+      embedding:
+        id: "${DATAROBOT_EMBEDDING_DEPLOYMENT_ID}"
+        model_name: "${DATAROBOT_EMBEDDING_MODEL_NAME}"
+      rerank:
+        id: "${DATAROBOT_RERANK_DEPLOYMENT_ID}"
+        model_name: "${DATAROBOT_RERANK_MODEL_NAME}"
+  
+  # DataRobot Codespaces specific configuration
+  ai-virtual-assistant-datarobot:codespaces:
+    enabled: true
+    environment: "codespaces"
+    region: "${DATAROBOT_REGION:-us-east-1}"
+    project_id: "${DATAROBOT_PROJECT_ID}"
+    
+  # Infrastructure configuration for Codespaces
+  ai-virtual-assistant-datarobot:infrastructure:
+    # Use DataRobot's managed services where possible
+    use_managed_postgres: true
+    use_managed_redis: true
+    use_managed_milvus: false  # Deploy locally in Codespaces
+    
+    # Resource limits for Codespaces
+    postgres_storage: "5Gi"  # Smaller for development
+    redis_memory: "1Gi"
+    milvus_memory: "2Gi"
+    
+    # Service scaling
+    agent_replicas: 1  # Single instance for development
+    analytics_replicas: 1
+    retriever_replicas: 1

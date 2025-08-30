@@ -1,6 +1,6 @@
 # Pulumi Deployment Guide for AI Virtual Assistant
 
-This guide explains how to deploy the AI Virtual Assistant using Pulumi for Infrastructure as Code (IaC) deployment.
+This guide explains how to deploy the AI Virtual Assistant using Pulumi for Infrastructure as Code (IaC) deployment, with specific support for **DataRobot Codespaces**.
 
 ## 🚀 **Why Pulumi Instead of Helm/Docker Compose?**
 
@@ -18,16 +18,67 @@ This guide explains how to deploy the AI Virtual Assistant using Pulumi for Infr
 - **❌ Docker Compose** - Single-node only, no scaling
 - **❌ Manual Configuration** - Error-prone, not repeatable
 
+## 🎯 **Deployment Options**
+
+### **1. 🏠 Local/Desktop Deployment**
+- Traditional Pulumi installation
+- Local Kubernetes cluster
+- Full infrastructure control
+
+### **2. 🚀 DataRobot Codespaces Deployment (Recommended)**
+- **No local Pulumi installation required**
+- **Automatic Pulumi CLI installation**
+- **DataRobot-native environment**
+- **Integrated with DataRobot services**
+
+---
+
 ## 📋 **Prerequisites**
 
+### **For Local/Desktop Deployment:**
 1. **Pulumi CLI**: Install from [pulumi.com](https://www.pulumi.com/docs/get-started/install/)
 2. **Kubernetes Cluster**: Accessible via kubectl
 3. **DataRobot Account**: With API access and deployments
 4. **Python 3.8+**: For Pulumi Python runtime
 
-## 🔧 **Installation**
+### **For DataRobot Codespaces Deployment:**
+1. **DataRobot Codespaces Environment**: Active Codespace
+2. **DataRobot Account**: With API access and deployments
+3. **Python 3.8+**: Available in Codespaces
+4. **kubectl**: Available in Codespaces (usually pre-installed)
 
-### **1. Install Pulumi CLI**
+---
+
+## 🔧 **Installation & Setup**
+
+### **Option 1: DataRobot Codespaces (Recommended)**
+
+#### **Quick Start (Automated)**
+```bash
+# From project root
+chmod +x deploy/pulumi-codespaces-quickstart.sh
+./deploy/pulumi-codespaces-quickstart.sh
+```
+
+#### **Manual Setup**
+```bash
+# 1. Set environment variables
+export DATAROBOT_API_TOKEN="your_token"
+export DATAROBOT_ENDPOINT="https://app.datarobot.com"
+export DATAROBOT_PROJECT_ID="your_project_id"  # Optional
+export DATAROBOT_LLM_DEPLOYMENT_ID="your_llm_id"
+export DATAROBOT_EMBEDDING_DEPLOYMENT_ID="your_embedding_id"
+export DATAROBOT_RERANK_DEPLOYMENT_ID="your_rerank_id"
+
+# 2. Deploy using Pulumi
+cd deploy/pulumi
+chmod +x deploy-codespaces.sh
+./deploy-codespaces.sh
+```
+
+### **Option 2: Local/Desktop Installation**
+
+#### **Install Pulumi CLI**
 ```bash
 # macOS
 brew install pulumi
@@ -39,32 +90,52 @@ curl -fsSL https://get.pulumi.com | sh
 winget install Pulumi.Pulumi
 ```
 
-### **2. Verify Installation**
+#### **Verify Installation**
 ```bash
 pulumi version
 pulumi plugin ls
 ```
 
+---
+
 ## 🏗️ **Project Structure**
 
+### **DataRobot Codespaces Structure**
 ```
 deploy/pulumi/
-├── Pulumi.yaml              # Project configuration
-├── __main__.py              # Main infrastructure code
-├── Pulumi.prod.yaml         # Production configuration
-├── requirements.txt          # Python dependencies
-└── deploy.sh                # Deployment script
+├── Pulumi.yaml                    # Project configuration
+├── codespaces_main.py             # Codespaces infrastructure code
+├── Pulumi.codespaces.yaml         # Codespaces configuration
+├── requirements-codespaces.txt     # Codespaces dependencies
+├── deploy-codespaces.sh           # Codespaces deployment script
+└── deploy.sh                      # Local deployment script
 ```
+
+### **Local/Desktop Structure**
+```
+deploy/pulumi/
+├── Pulumi.yaml                    # Project configuration
+├── __main__.py                    # Local infrastructure code
+├── Pulumi.prod.yaml              # Production configuration
+├── requirements.txt               # Local dependencies
+└── deploy.sh                     # Local deployment script
+```
+
+---
 
 ## 🚀 **Quick Start**
 
-### **Option 1: Automated Deployment (Recommended)**
+### **DataRobot Codespaces (Recommended)**
 ```bash
+# 1. Quick start (interactive)
+./deploy/pulumi-codespaces-quickstart.sh
+
+# 2. Or manual deployment
 cd deploy/pulumi
-./deploy.sh
+./deploy-codespaces.sh
 ```
 
-### **Option 2: Manual Deployment**
+### **Local/Desktop Deployment**
 ```bash
 cd deploy/pulumi
 
@@ -77,7 +148,7 @@ pulumi stack init dev
 # Configure DataRobot settings
 pulumi config set datarobot:api_token "your_token"
 pulumi config set datarobot:endpoint "https://app.datarobot.com"
-pulumi config set datarobot:deployments:llm:id "your_llm_id"
+pulumi config set datarobot:deployments:llm/id "your_llm_id"
 pulumi config set datarobot:deployments:embedding/id "your_embedding_id"
 pulumi config set datarobot:deployments:rerank/id "your_rerank_id"
 
@@ -85,127 +156,122 @@ pulumi config set datarobot:deployments:rerank/id "your_rerank_id"
 pulumi up --yes
 ```
 
+---
+
 ## ⚙️ **Configuration**
 
-### **DataRobot Configuration**
+### **DataRobot Codespaces Configuration**
 ```yaml
-# Pulumi.prod.yaml
+# Pulumi.codespaces.yaml
 config:
   ai-virtual-assistant-datarobot:datarobot:
-    api_token: "your_datarobot_api_token"
-    endpoint: "https://app.datarobot.com"
+    api_token: "${DATAROBOT_API_TOKEN}"
+    endpoint: "${DATAROBOT_ENDPOINT}"
     deployments:
       llm:
-        id: "your_llm_deployment_id"
-        model_name: "your_llm_model_name"
+        id: "${DATAROBOT_LLM_DEPLOYMENT_ID}"
+        model_name: "${DATAROBOT_LLM_MODEL_NAME}"
       embedding:
-        id: "your_embedding_deployment_id"
-        model_name: "your_embedding_model_name"
+        id: "${DATAROBOT_EMBEDDING_DEPLOYMENT_ID}"
+        model_name: "${DATAROBOT_EMBEDDING_MODEL_NAME}"
       rerank:
-        id: "your_rerank_deployment_id"
-        model_name: "your_rerank_model_name"
+        id: "${DATAROBOT_RERANK_DEPLOYMENT_ID}"
+        model_name: "${DATAROBOT_RERANK_MODEL_NAME}"
+  
+  # Codespaces specific configuration
+  ai-virtual-assistant-datarobot:codespaces:
+    enabled: true
+    environment: "codespaces"
+    region: "${DATAROBOT_REGION:-us-east-1}"
+    project_id: "${DATAROBOT_PROJECT_ID}"
+    
+  # Infrastructure configuration for Codespaces
+  ai-virtual-assistant-datarobot:infrastructure:
+    use_managed_postgres: false  # Use local in Codespaces
+    use_managed_redis: false    # Use local in Codespaces
+    postgres_storage: "5Gi"     # Smaller for development
+    agent_replicas: 1           # Single instance for development
 ```
 
-### **Environment-Specific Configs**
+### **Environment Variables for Codespaces**
 ```bash
-# Development
-pulumi stack init dev
-pulumi config set datarobot:endpoint "https://dev.datarobot.com"
+# Required
+export DATAROBOT_API_TOKEN="your_token"
+export DATAROBOT_ENDPOINT="https://app.datarobot.com"
 
-# Staging
-pulumi stack init staging
-pulumi config set datarobot:endpoint "https://staging.datarobot.com"
-
-# Production
-pulumi stack init prod
-pulumi config set datarobot:endpoint "https://app.datarobot.com"
+# Optional
+export DATAROBOT_PROJECT_ID="your_project_id"
+export DATAROBOT_LLM_DEPLOYMENT_ID="your_llm_id"
+export DATAROBOT_EMBEDDING_DEPLOYMENT_ID="your_embedding_id"
+export DATAROBOT_RERANK_DEPLOYMENT_ID="your_rerank_id"
+export DATAROBOT_REGION="us-east-1"
 ```
+
+---
 
 ## 🏗️ **Infrastructure Components**
 
-### **1. Namespace**
-- Isolated Kubernetes namespace for the application
-- Resource quotas and limits
-- Network policies
+### **DataRobot Codespaces Components**
+1. **Namespace**: Isolated Kubernetes namespace for Codespaces
+2. **DataRobot Secrets**: Secure storage of API tokens and deployment IDs
+3. **Local Services**: PostgreSQL, Redis, Milvus (optimized for development)
+4. **Application Services**: Agent, Analytics, Retriever services
+5. **DataRobot Ingress**: Integration with DataRobot's ingress controller
 
-### **2. DataRobot Secrets**
-- Secure storage of API tokens
-- Deployment IDs
-- Encrypted at rest
+### **Local/Desktop Components**
+1. **Namespace**: Production-ready Kubernetes namespace
+2. **DataRobot Secrets**: Secure storage of credentials
+3. **Database Layer**: PostgreSQL with persistent storage
+4. **Vector Database**: Milvus for embeddings
+5. **Application Services**: Scalable agent services
+6. **Networking**: Ingress with TLS termination
+7. **Autoscaling**: Horizontal Pod Autoscaler
 
-### **3. Database Layer**
-- PostgreSQL with persistent storage
-- Redis for caching
-- Automatic password generation
-
-### **4. Vector Database**
-- Milvus for embeddings
-- Persistent storage
-- Optimized for AI workloads
-
-### **5. Application Services**
-- Agent services (scalable)
-- Analytics services
-- Retriever services
-- Health checks and monitoring
-
-### **6. Networking**
-- Ingress with TLS termination
-- Load balancing
-- Service mesh ready
-
-### **7. Autoscaling**
-- Horizontal Pod Autoscaler
-- CPU-based scaling
-- Configurable min/max replicas
+---
 
 ## 🔄 **Deployment Workflow**
 
-### **1. Preview Changes**
+### **DataRobot Codespaces Workflow**
 ```bash
-pulumi preview
+# 1. Set environment variables
+export DATAROBOT_API_TOKEN="your_token"
+export DATAROBOT_ENDPOINT="https://app.datarobot.com"
+
+# 2. Quick start (recommended)
+./deploy/pulumi-codespaces-quickstart.sh
+
+# 3. Or manual deployment
+cd deploy/pulumi
+./deploy-codespaces.sh
 ```
 
-### **2. Deploy Infrastructure**
+### **Local/Desktop Workflow**
 ```bash
-pulumi up --yes
+# 1. Install Pulumi CLI
+brew install pulumi  # macOS
+
+# 2. Deploy infrastructure
+cd deploy/pulumi
+./deploy.sh
 ```
 
-### **3. Monitor Deployment**
-```bash
-kubectl get all -n ai-virtual-assistant
-kubectl logs -f deployment/agent-services -n ai-virtual-assistant
-```
-
-### **4. Update Configuration**
-```bash
-pulumi config set datarobot:api_token "new_token"
-pulumi up --yes
-```
-
-### **5. Destroy Infrastructure**
-```bash
-pulumi destroy --yes
-```
+---
 
 ## 📊 **Monitoring and Management**
 
 ### **Check Deployment Status**
 ```bash
-# Pulumi stack status
-pulumi stack
+# Codespaces
+kubectl get all -n ai-virtual-assistant-codespaces
 
-# Kubernetes resources
+# Local
 kubectl get all -n ai-virtual-assistant
-
-# Service endpoints
-kubectl get endpoints -n ai-virtual-assistant
 ```
 
 ### **View Logs**
 ```bash
 # Application logs
-kubectl logs -f deployment/agent-services -n ai-virtual-assistant
+kubectl logs -f deployment/agent-services -n ai-virtual-assistant-codespaces
 
 # Infrastructure logs
 pulumi logs --follow
@@ -214,33 +280,34 @@ pulumi logs --follow
 ### **Scale Services**
 ```bash
 # Manual scaling
-kubectl scale deployment agent-services --replicas=5 -n ai-virtual-assistant
+kubectl scale deployment agent-services --replicas=2 -n ai-virtual-assistant-codespaces
 
 # Or update Pulumi config
-pulumi config set agent:min_replicas 5
+pulumi config set infrastructure:agent_replicas 2
 pulumi up --yes
 ```
 
+---
+
 ## 🔒 **Security Features**
 
-### **1. Secrets Management**
-- Kubernetes secrets for sensitive data
-- No hardcoded credentials
-- Encrypted storage
+### **DataRobot Codespaces Security**
+- **Secrets Management**: Kubernetes secrets for sensitive data
+- **Environment Isolation**: Dedicated namespace for Codespaces
+- **DataRobot Integration**: Secure API token handling
+- **Resource Limits**: Controlled resource usage for development
 
-### **2. Network Policies**
-- Pod-to-pod communication control
-- Ingress/egress rules
-- Service mesh integration ready
+### **Local/Desktop Security**
+- **Secrets Management**: Kubernetes secrets for sensitive data
+- **Network Policies**: Pod-to-pod communication control
+- **RBAC**: Service account permissions
+- **TLS Termination**: Secure ingress configuration
 
-### **3. RBAC**
-- Service account permissions
-- Role-based access control
-- Least privilege principle
+---
 
 ## 🚀 **Advanced Features**
 
-### **1. Multi-Environment Deployment**
+### **Multi-Environment Deployment**
 ```bash
 # Deploy to multiple environments
 for env in dev staging prod; do
@@ -249,30 +316,51 @@ for env in dev staging prod; do
 done
 ```
 
-### **2. CI/CD Integration**
+### **CI/CD Integration**
 ```yaml
-# GitHub Actions example
+# GitHub Actions example for Codespaces
 - name: Deploy with Pulumi
   run: |
     cd deploy/pulumi
-    pulumi stack select ${{ github.ref_name }}
-    pulumi up --yes
+    export DATAROBOT_API_TOKEN=${{ secrets.DATAROBOT_API_TOKEN }}
+    export DATAROBOT_ENDPOINT=${{ secrets.DATAROBOT_ENDPOINT }}
+    ./deploy-codespaces.sh
 ```
 
-### **3. Custom Resource Definitions**
-```python
-# Add custom monitoring
-monitoring = k8s.apiextensions.v1.CustomResourceDefinition(
-    "ai-monitoring",
-    spec=k8s.apiextensions.v1.CustomResourceDefinitionSpecArgs(
-        # ... monitoring configuration
-    )
-)
-```
+---
 
 ## 🔧 **Troubleshooting**
 
-### **Common Issues**
+### **DataRobot Codespaces Issues**
+
+1. **Pulumi Not Installed**
+   ```bash
+   # The script automatically installs Pulumi
+   # If manual installation needed:
+   curl -fsSL https://get.pulumi.com | sh
+   export PATH="$HOME/.pulumi/bin:$PATH"
+   ```
+
+2. **Environment Variables Missing**
+   ```bash
+   # Check required variables
+   echo $DATAROBOT_API_TOKEN
+   echo $DATAROBOT_ENDPOINT
+   
+   # Set if missing
+   export DATAROBOT_API_TOKEN="your_token"
+   export DATAROBOT_ENDPOINT="https://app.datarobot.com"
+   ```
+
+3. **Kubernetes Not Accessible**
+   ```bash
+   # Check kubectl
+   kubectl cluster-info
+   
+   # This might be expected in some Codespaces environments
+   ```
+
+### **Local/Desktop Issues**
 
 1. **Pulumi Not Installed**
    ```bash
@@ -287,34 +375,16 @@ monitoring = k8s.apiextensions.v1.CustomResourceDefinition(
    kubectl config current-context
    ```
 
-3. **Python Dependencies Missing**
-   ```bash
-   # Install requirements
-   pip install -r requirements.txt
-   ```
-
-4. **Configuration Errors**
-   ```bash
-   # View current config
-   pulumi config
-   
-   # Set missing values
-   pulumi config set datarobot:api_token "your_token"
-   ```
-
-### **Debug Mode**
-```bash
-# Enable debug logging
-export PULUMI_DEBUG=1
-pulumi up --yes
-```
+---
 
 ## 📚 **Additional Resources**
 
 - [Pulumi Documentation](https://www.pulumi.com/docs/)
 - [Pulumi Kubernetes Provider](https://www.pulumi.com/registry/packages/kubernetes/)
-- [Pulumi Python Examples](https://github.com/pulumi/examples)
 - [DataRobot API Documentation](https://docs.datarobot.com/en/docs/api/)
+- [DataRobot Codespaces Documentation](https://docs.datarobot.com/en/docs/codespaces/)
+
+---
 
 ## 🆘 **Getting Help**
 
@@ -322,11 +392,37 @@ pulumi up --yes
 - **DataRobot Support**: Contact DataRobot support for API issues
 - **Kubernetes Issues**: Check [Kubernetes documentation](https://kubernetes.io/docs/)
 
+---
+
 ## 🎯 **Next Steps**
 
 After successful deployment:
-1. **Monitor Performance** - Use built-in metrics and logging
-2. **Scale Resources** - Adjust based on usage patterns
-3. **Add Monitoring** - Integrate with DataRobot monitoring
-4. **Automate Updates** - Set up CI/CD for infrastructure changes
-5. **Backup Strategy** - Implement data backup and recovery
+
+### **DataRobot Codespaces:**
+1. **Test Services**: Use the provided URLs to access your assistant
+2. **Monitor Performance**: Check service logs and metrics
+3. **Scale Resources**: Adjust based on usage patterns
+4. **Integrate**: Use with DataRobot workflows and pipelines
+
+### **Local/Desktop:**
+1. **Monitor Performance**: Use built-in metrics and logging
+2. **Scale Resources**: Adjust based on usage patterns
+3. **Add Monitoring**: Integrate with your monitoring stack
+4. **Automate Updates**: Set up CI/CD for infrastructure changes
+
+---
+
+## 🎉 **You're Ready to Deploy!**
+
+### **For DataRobot Codespaces (Recommended):**
+```bash
+./deploy/pulumi-codespaces-quickstart.sh
+```
+
+### **For Local/Desktop:**
+```bash
+cd deploy/pulumi
+./deploy.sh
+```
+
+This gives you the **DataRobot-native approach** you're used to, with proper Infrastructure as Code, while maintaining all the other deployment options for different use cases! 🚀
