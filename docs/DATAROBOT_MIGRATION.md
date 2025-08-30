@@ -62,14 +62,71 @@ RANKING_MODEL_ENGINE=datarobot
 
 ### 3. Docker Compose Deployment
 
-Use the DataRobot-specific compose file:
+This step involves **both editing a file AND running terminal commands**.
+
+#### **Step 3a: Create Environment File**
+**Action**: Create and edit a `.env` file
 
 ```bash
-# Start with DataRobot configuration
-docker compose -f deploy/compose/docker-compose.yaml -f deploy/compose/docker-compose-datarobot.yaml up -d
+# Navigate to your project directory
+cd /path/to/your/ai-virtual-assistant
 
-# The NIM services will not be started
+# Create the .env file
+touch .env
 ```
+
+**Then edit the `.env` file** with your actual DataRobot values. You can use any text editor:
+
+```bash
+# Option 1: Use nano (simple terminal editor)
+nano .env
+
+# Option 2: Use vim (advanced terminal editor)
+vim .env
+
+# Option 3: Use VS Code (if installed)
+code .env
+
+# Option 4: Use your preferred editor
+open .env
+```
+
+**Content to put in `.env`**:
+```bash
+# DataRobot Configuration
+DATAROBOT_API_TOKEN=your_actual_api_token_here
+DATAROBOT_ENDPOINT=https://app.datarobot.com
+DATAROBOT_LLM_DEPLOYMENT_ID=your_actual_llm_deployment_id
+DATAROBOT_EMBEDDING_DEPLOYMENT_ID=your_actual_embedding_deployment_id
+DATAROBOT_RERANK_DEPLOYMENT_ID=your_actual_rerank_deployment_id
+
+# Model Names (should match your DataRobot deployments)
+LLM_MODEL_NAME=your_actual_llm_model_name
+EMBEDDING_MODEL_NAME=your_actual_embedding_model_name
+RERANK_MODEL_NAME=your_actual_rerank_model_name
+
+# Engine Configuration
+LLM_MODEL_ENGINE=datarobot
+EMBEDDING_MODEL_ENGINE=datarobot
+RANKING_MODEL_ENGINE=datarobot
+```
+
+**Important**: Replace all the `your_actual_*` values with your real DataRobot credentials and deployment IDs.
+
+#### **Step 3b: Run Docker Compose Command**
+**Action**: Run this terminal command
+
+```bash
+# Start the services with DataRobot configuration
+docker compose -f deploy/compose/docker-compose.yaml -f deploy/compose/docker-compose-datarobot.yaml --env-file .env up -d
+```
+
+**What this command does**:
+- Uses the base `docker-compose.yaml` file
+- Overrides with DataRobot-specific settings from `docker-compose-datarobot.yaml`
+- Loads your DataRobot credentials from the `.env` file
+- Starts all services in the background (`-d` flag)
+- The NVIDIA NIM services will NOT be started (only DataRobot endpoints used)
 
 ### 4. Kubernetes/Helm Deployment
 
