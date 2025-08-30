@@ -1,0 +1,14 @@
+config:
+  ai-virtual-assistant-datarobot:datarobot:
+    api_token: "your_datarobot_api_token_here"
+    endpoint: "https://app.datarobot.com"
+    deployments:
+      llm:
+        id: "your_llm_deployment_id"
+        model_name: "your_llm_model_name"
+      embedding:
+        id: "your_embedding_deployment_id"
+        model_name: "your_embedding_model_name"
+      rerank:
+        id: "your_rerank_deployment_id"
+        model_name: "your_rerank_model_name"
