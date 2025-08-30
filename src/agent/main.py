@@ -24,14 +24,14 @@ from langchain_core.prompts import MessagesPlaceholder
 from langgraph.graph import END, StateGraph, START
 from langgraph.prebuilt import tools_condition
 from langchain_core.runnables import RunnableConfig
-from src.agent.tools import (
+from agent.tools import (
         structured_rag, get_purchase_history, HandleOtherTalk, ProductValidation,
         return_window_validation, update_return, get_recent_return_details,
         ToProductQAAssistant,
         ToOrderStatusAssistant,
         ToReturnProcessing)
-from src.agent.utils import get_product_name, create_tool_node_with_fallback, get_checkpointer, canonical_rag
-from src.common.utils import get_llm, get_prompts
+from agent.utils import get_product_name, create_tool_node_with_fallback, get_checkpointer, canonical_rag
+from common.utils import get_llm, get_prompts
 
 
 logger = logging.getLogger(__name__)
