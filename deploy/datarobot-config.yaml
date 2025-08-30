@@ -1,0 +1,54 @@
+# DataRobot Configuration Template for AI Virtual Assistant
+# This file shows how to configure the system to use DataRobot endpoints instead of NVIDIA NIMs
+
+# Example environment variables for DataRobot configuration
+# Copy these to your .env file or set them in your deployment environment
+
+# DataRobot API Configuration
+DATAROBOT_API_TOKEN=your_datarobot_api_token_here
+DATAROBOT_ENDPOINT=https://app.datarobot.com
+
+# DataRobot Deployment IDs
+# You need to create these deployments in DataRobot and get their IDs
+DATAROBOT_LLM_DEPLOYMENT_ID=your_llm_deployment_id_here
+DATAROBOT_EMBEDDING_DEPLOYMENT_ID=your_embedding_deployment_id_here
+DATAROBOT_RERANK_DEPLOYMENT_ID=your_rerank_deployment_id_here
+
+# Model Configuration
+# These should match the models deployed in your DataRobot deployments
+LLM_MODEL_NAME=your_llm_model_name
+EMBEDDING_MODEL_NAME=your_embedding_model_name
+RERANK_MODEL_NAME=your_rerank_model_name
+
+# Engine Configuration
+# Set these to "datarobot" to use DataRobot instead of NVIDIA NIMs
+LLM_MODEL_ENGINE=datarobot
+EMBEDDING_MODEL_ENGINE=datarobot
+RANKING_MODEL_ENGINE=datarobot
+
+# Example Docker Compose environment variables
+# APP_LLM_MODELENGINE=datarobot
+# APP_EMBEDDINGS_MODELENGINE=datarobot
+# APP_RANKING_MODELENGINE=datarobot
+# DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+# DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT}
+# DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+# DATAROBOT_EMBEDDING_DEPLOYMENT_ID=${DATAROBOT_EMBEDDING_DEPLOYMENT_ID}
+# DATAROBOT_RERANK_DEPLOYMENT_ID=${DATAROBOT_RERANK_DEPLOYMENT_ID}
+
+# Example Helm values override
+# Create a values-datarobot.yaml file with these settings:
+datarobot:
+  enabled: true
+  api_token: ${DATAROBOT_API_TOKEN}
+  endpoint: ${DATAROBOT_ENDPOINT}
+  deployments:
+    llm:
+      id: ${DATAROBOT_LLM_DEPLOYMENT_ID}
+      model_name: ${LLM_MODEL_NAME}
+    embedding:
+      id: ${DATAROBOT_EMBEDDING_DEPLOYMENT_ID}
+      model_name: ${EMBEDDING_MODEL_NAME}
+    rerank:
+      id: ${DATAROBOT_RERANK_DEPLOYMENT_ID}
+      model_name: ${RERANK_MODEL_NAME}

@@ -1,0 +1,57 @@
+# DataRobot Docker Compose Configuration
+# This file replaces the NIM services with DataRobot endpoints
+# Use with: docker compose -f docker-compose.yaml -f docker-compose-datarobot.yaml up -d
+
+version: '3.8'
+
+services:
+  # Agent Services - Configured for DataRobot
+  agent-services:
+    environment:
+      - APP_LLM_MODELENGINE=datarobot
+      - DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+      - DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT:-https://app.datarobot.com}
+      - DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+      - APP_LLM_MODELNAME=${LLM_MODEL_NAME:-datarobot-llm-model}
+
+  # Analytics Services - Configured for DataRobot
+  analytics-services:
+    environment:
+      - APP_LLM_MODELENGINE=datarobot
+      - DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+      - DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT:-https://app.datarobot.com}
+      - DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+      - APP_LLM_MODELNAME=${LLM_MODEL_NAME:-datarobot-llm-model}
+
+  # Retriever Canonical - Configured for DataRobot
+  retriever-canonical:
+    environment:
+      - APP_LLM_MODELENGINE=datarobot
+      - APP_EMBEDDINGS_MODELENGINE=datarobot
+      - DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+      - DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT:-https://app.datarobot.com}
+      - DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+      - DATAROBOT_EMBEDDING_DEPLOYMENT_ID=${DATAROBOT_EMBEDDING_DEPLOYMENT_ID}
+      - APP_LLM_MODELNAME=${LLM_MODEL_NAME:-datarobot-llm-model}
+      - APP_EMBEDDINGS_MODELNAME=${EMBEDDING_MODEL_NAME:-datarobot-embedding-model}
+
+  # Retriever Structured - Configured for DataRobot
+  retriever-structured:
+    environment:
+      - APP_LLM_MODELENGINE=datarobot
+      - APP_EMBEDDINGS_MODELENGINE=datarobot
+      - APP_RANKING_MODELENGINE=datarobot
+      - DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+      - DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT:-https://app.datarobot.com}
+      - DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+      - DATAROBOT_EMBEDDING_DEPLOYMENT_ID=${DATAROBOT_EMBEDDING_DEPLOYMENT_ID}
+      - DATAROBOT_RERANK_DEPLOYMENT_ID=${DATAROBOT_RERANK_DEPLOYMENT_ID}
+      - APP_LLM_MODELNAME=${LLM_MODEL_NAME:-datarobot-llm-model}
+      - APP_EMBEDDINGS_MODELNAME=${EMBEDDING_MODEL_NAME:-datarobot-embedding-model}
+      - APP_RANKING_MODELNAME=${RERANK_MODEL_NAME:-datarobot-rerank-model}
+
+# Remove NIM services from the default compose file
+# The following services are not needed when using DataRobot:
+# - nemollm-inference
+# - nemollm-embedding  
+# - ranking-ms

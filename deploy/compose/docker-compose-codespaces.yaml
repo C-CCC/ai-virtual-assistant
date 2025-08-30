@@ -1,0 +1,267 @@
+# DataRobot Codespaces Docker Compose Configuration
+# This file is optimized for running in DataRobot Codespaces environment
+# Use with: docker compose -f docker-compose.yaml -f docker-compose-codespaces.yaml up -d
+
+version: '3.8'
+
+services:
+  # PostgreSQL - Use DataRobot's managed database or local for development
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis - Use DataRobot's managed cache or local for development
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Milvus - Vector database for embeddings
+  milvus:
+    image: milvusdb/milvus:v2.3.3
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9010
+      KNOWHERE_GPU_MEM_POOL_SIZE: 2048;4096
+    ports:
+      - "19530:19530"
+      - "9091:9091"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    depends_on:
+      - etcd
+      - minio
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ETCD - Required for Milvus
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: "1000"
+      ETCD_QUOTA_BACKEND_BYTES: 4294967296
+      ETCD_SNAPSHOT_COUNT: 50000
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    volumes:
+      - etcd_data:/etcd
+    command: etcd -advertise-client-urls=http://etcd:2379 -listen-client-urls=http://0.0.0.0:2379 --data-dir=/etcd
+
+  # MinIO - Object storage for Milvus
+  minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9010:9010"
+      - "9000:9000"
+    volumes:
+      - minio_data:/minio
+    command: minio server /minio --console-address ":9000" --address ":9010"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Agent Services - Configured for DataRobot Codespaces
+  agent-services:
+    build:
+      context: ../../src/agent
+      dockerfile: Dockerfile
+    environment:
+      - APP_LLM_MODELENGINE=datarobot
+      - DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+      - DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT:-https://app.datarobot.com}
+      - DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+      - APP_LLM_MODELNAME=${LLM_MODEL_NAME:-datarobot-llm-model}
+      - APP_CACHE_NAME=redis
+      - APP_CACHE_URL=redis:6379
+      - APP_DATABASE_NAME=postgres
+      - APP_DATABASE_URL=postgres:5432
+      - APP_CHECKPOINTER_NAME=postgres
+      - APP_CHECKPOINTER_URL=postgres:5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+      - CANONICAL_RAG_URL=http://retriever-canonical:8086
+      - STRUCTURED_RAG_URI=http://retriever-structured:8087
+      - LOGLEVEL=${LOGLEVEL:-INFO}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../../data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Analytics Services - Configured for DataRobot Codespaces
+  analytics-services:
+    build:
+      context: ../../src/analytics
+      dockerfile: Dockerfile
+    environment:
+      - APP_LLM_MODELENGINE=datarobot
+      - DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+      - DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT:-https://app.datarobot.com}
+      - DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+      - APP_LLM_MODELNAME=${LLM_MODEL_NAME:-datarobot-llm-model}
+      - APP_DATABASE_NAME=postgres
+      - APP_DATABASE_URL=postgres:5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+      - CUSTOMER_DATA_DB=customer_data
+      - PERSIST_DATA=true
+      - LOGLEVEL=${LOGLEVEL:-INFO}
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ../../data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ../../src/api_gateway
+      dockerfile: Dockerfile
+    environment:
+      - AGENT_SERVER_URL=http://agent-services:8000
+      - ANALYTICS_SERVER_URL=http://analytics-services:8000
+    ports:
+      - "8002:8000"
+    depends_on:
+      - agent-services
+      - analytics-services
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Retriever Canonical - Configured for DataRobot Codespaces
+  retriever-canonical:
+    build:
+      context: ../../src/retrievers
+      dockerfile: Dockerfile
+    environment:
+      - APP_LLM_MODELENGINE=datarobot
+      - APP_EMBEDDINGS_MODELENGINE=datarobot
+      - DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+      - DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT:-https://app.datarobot.com}
+      - DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+      - DATAROBOT_EMBEDDING_DEPLOYMENT_ID=${DATAROBOT_EMBEDDING_DEPLOYMENT_ID}
+      - APP_LLM_MODELNAME=${LLM_MODEL_NAME:-datarobot-llm-model}
+      - APP_EMBEDDINGS_MODELNAME=${EMBEDDING_MODEL_NAME:-datarobot-embedding-model}
+      - APP_VECTORSTORE_URL=http://milvus:19530
+      - APP_VECTORSTORE_NAME=milvus
+      - COLLECTION_NAME=unstructured_data
+      - APP_RETRIEVER_TOPK=4
+      - APP_RETRIEVER_SCORETHRESHOLD=0.25
+      - VECTOR_DB_TOPK=20
+      - LOGLEVEL=${LOGLEVEL:-INFO}
+    ports:
+      - "8003:8000"
+    depends_on:
+      milvus:
+        condition: service_healthy
+    volumes:
+      - ../../data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Retriever Structured - Configured for DataRobot Codespaces
+  retriever-structured:
+    build:
+      context: ../../src/retrievers
+      dockerfile: Dockerfile
+    environment:
+      - APP_LLM_MODELENGINE=datarobot
+      - APP_EMBEDDINGS_MODELENGINE=datarobot
+      - APP_RANKING_MODELENGINE=datarobot
+      - DATAROBOT_API_TOKEN=${DATAROBOT_API_TOKEN}
+      - DATAROBOT_ENDPOINT=${DATAROBOT_ENDPOINT:-https://app.datarobot.com}
+      - DATAROBOT_LLM_DEPLOYMENT_ID=${DATAROBOT_LLM_DEPLOYMENT_ID}
+      - DATAROBOT_EMBEDDING_DEPLOYMENT_ID=${DATAROBOT_EMBEDDING_DEPLOYMENT_ID}
+      - DATAROBOT_RERANK_DEPLOYMENT_ID=${DATAROBOT_RERANK_DEPLOYMENT_ID}
+      - APP_LLM_MODELNAME=${LLM_MODEL_NAME:-datarobot-llm-model}
+      - APP_EMBEDDINGS_MODELNAME=${EMBEDDING_MODEL_NAME:-datarobot-embedding-model}
+      - APP_RANKING_MODELNAME=${RERANK_MODEL_NAME:-datarobot-rerank-model}
+      - APP_DATABASE_NAME=postgres
+      - APP_DATABASE_URL=postgres:5432
+      - APP_VECTORSTORE_URL=http://milvus:19530
+      - APP_VECTORSTORE_NAME=milvus
+      - POSTGRES_USER=postgres_readonly
+      - POSTGRES_PASSWORD=readonly_password
+      - POSTGRES_DB=customer_data
+      - COLLECTION_NAME=structured_data
+      - CSV_NAME=PdM_machines
+      - LOGLEVEL=${LOGLEVEL:-INFO}
+    ports:
+      - "8004:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      milvus:
+        condition: service_healthy
+    volumes:
+      - ../../data:/app/data:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  milvus_data:
+  etcd_data:
+  minio_data:
+
+networks:
+  default:
+    name: ai-virtual-assistant-codespaces

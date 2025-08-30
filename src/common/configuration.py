@@ -152,6 +152,22 @@ class LLMConfig(ConfigWizard):
         default="ai-mixtral-8x7b-instruct",
         help_txt="The name of the ai catalog model to be used with PandasAI agent",
     )
+    # DataRobot specific configuration
+    datarobot_api_token: str = configfield(
+        "datarobot_api_token",
+        default="",
+        help_txt="DataRobot API token for authentication",
+    )
+    datarobot_endpoint: str = configfield(
+        "datarobot_endpoint",
+        default="https://app.datarobot.com",
+        help_txt="DataRobot endpoint URL",
+    )
+    datarobot_deployment_id: str = configfield(
+        "datarobot_deployment_id",
+        default="",
+        help_txt="DataRobot deployment ID for LLM inference",
+    )
 
 @configclass
 class TextSplitterConfig(ConfigWizard):
@@ -205,6 +221,12 @@ class EmbeddingConfig(ConfigWizard):
         default="",
         help_txt="The url of the server hosting nemo embedding model",
     )
+    # DataRobot specific configuration for embeddings
+    datarobot_embedding_deployment_id: str = configfield(
+        "datarobot_embedding_deployment_id",
+        default="",
+        help_txt="DataRobot deployment ID for embeddings",
+    )
 
 @configclass
 class RankingConfig(ConfigWizard):
@@ -227,6 +249,12 @@ class RankingConfig(ConfigWizard):
         "server_url",
         default="",
         help_txt="The url of the server hosting nemo Ranking model",
+    )
+    # DataRobot specific configuration for reranking
+    datarobot_rerank_deployment_id: str = configfield(
+        "datarobot_rerank_deployment_id",
+        default="",
+        help_txt="DataRobot deployment ID for reranking",
     )
 
 @configclass

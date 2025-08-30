@@ -1,0 +1,167 @@
+# DataRobot Helm Values Override
+# This file overrides the default values.yaml to use DataRobot endpoints instead of NVIDIA NIMs
+# Apply this with: helm install -f values.yaml -f values-datarobot.yaml
+
+# Global DataRobot configuration
+global:
+  datarobot:
+    enabled: true
+    api_token: ""  # Set this via environment variable or secret
+    endpoint: "https://app.datarobot.com"
+    deployments:
+      llm:
+        id: ""  # Set this via environment variable or secret
+        model_name: "datarobot-llm-model"
+      embedding:
+        id: ""  # Set this via environment variable or secret
+        model_name: "datarobot-embedding-model"
+      rerank:
+        id: ""  # Set this via environment variable or secret
+        model_name: "datarobot-rerank-model"
+
+# Agent Services - LLM Configuration
+agent-services:
+  applicationSpecs:
+    agent-services-deployment:
+      containers:
+        agent-services-container:
+          env:
+          - name: APP_LLM_MODELENGINE
+            value: "datarobot"
+          - name: DATAROBOT_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: api-token
+          - name: DATAROBOT_ENDPOINT
+            value: "https://app.datarobot.com"
+          - name: DATAROBOT_LLM_DEPLOYMENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: llm-deployment-id
+
+# Analytics Services - LLM Configuration
+analytics-services:
+  applicationSpecs:
+    analytics-deployment:
+      containers:
+        analytics-services-container:
+          env:
+          - name: APP_LLM_MODELENGINE
+            value: "datarobot"
+          - name: DATAROBOT_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: api-token
+          - name: DATAROBOT_ENDPOINT
+            value: "https://app.datarobot.com"
+          - name: DATAROBOT_LLM_DEPLOYMENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: llm-deployment-id
+
+# Retriever Canonical - LLM and Embedding Configuration
+retriever-canonical:
+  applicationSpecs:
+    canonical-deployment:
+      containers:
+        retriever-canonical:
+          env:
+          - name: APP_LLM_MODELENGINE
+            value: "datarobot"
+          - name: APP_EMBEDDINGS_MODELENGINE
+            value: "datarobot"
+          - name: DATAROBOT_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: api-token
+          - name: DATAROBOT_ENDPOINT
+            value: "https://app.datarobot.com"
+          - name: DATAROBOT_LLM_DEPLOYMENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: llm-deployment-id
+          - name: DATAROBOT_EMBEDDING_DEPLOYMENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: embedding-deployment-id
+
+# Retriever Structured - LLM, Embedding, and Rerank Configuration
+retriever-structured:
+  applicationSpecs:
+    structured-deployment:
+      containers:
+        retriever-structured:
+          env:
+          - name: APP_LLM_MODELENGINE
+            value: "datarobot"
+          - name: APP_EMBEDDINGS_MODELENGINE
+            value: "datarobot"
+          - name: APP_RANKING_MODELENGINE
+            value: "datarobot"
+          - name: DATAROBOT_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: api-token
+          - name: DATAROBOT_ENDPOINT
+            value: "https://app.datarobot.com"
+          - name: DATAROBOT_LLM_DEPLOYMENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: llm-deployment-id
+          - name: DATAROBOT_EMBEDDING_DEPLOYMENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: embedding-deployment-id
+          - name: DATAROBOT_RERANK_DEPLOYMENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: datarobot-secrets
+                key: rerank-deployment-id
+
+# Remove NIM egress rules since we're not using them
+agent-services:
+  egress:
+    # Remove llm-nim egress rule
+    redis:
+      address: cache-services-cache-services-deployment-cache-services-service
+      port: 6379
+    postgres:
+      address: postgres-postgres-deployment-postgres-service
+      port: 5432
+    chain-server-canonical:
+      address: retriever-canonical-canonical-deployment-canonical-service
+      port: 8086
+    chain-server-structured:
+      address: retriever-structured-structured-deployment-structured-service
+      port: 8087
+
+analytics-services:
+  egress:
+    # Remove llm-nim egress rule
+    postgres:
+      address: postgres-postgres-deployment-postgres-service
+      port: 5432
+
+retriever-canonical:
+  egress:
+    # Remove NIM egress rules
+    milvus:
+      address: milvus-milvus-deployment-milvus-service
+      port: 19530
+
+retriever-structured:
+  egress:
+    # Remove NIM egress rules
+    postgres:
+      address: postgres-postgres-deployment-postgres-service
+      port: 5432

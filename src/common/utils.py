@@ -45,6 +45,12 @@ except Exception as e:
     logger.error(f"Optional langchain API Catalog connector langchain_nvidia_ai_endpoints not installed.")
 
 try:
+    from .datarobot_langchain import DataRobotChatModel, DataRobotEmbeddings, DataRobotRerank
+    from .datarobot_client import DataRobotConfig
+except Exception as e:
+    logger.warning(f"Optional DataRobot connector not installed: {e}")
+
+try:
     from langchain_community.vectorstores import PGVector
     from langchain_community.vectorstores import Milvus
     from langchain_community.docstore.in_memory import InMemoryDocstore
@@ -188,8 +194,20 @@ def get_llm(**kwargs) -> LLM | SimpleChatModel:
                             temperature = kwargs.get('temperature', None),
                             top_p = kwargs.get('top_p', None),
                             max_tokens = kwargs.get('max_tokens', None))
+    elif settings.llm.model_engine == "datarobot":
+        if not all([settings.llm.datarobot_api_token, settings.llm.datarobot_deployment_id]):
+            raise RuntimeError("DataRobot configuration requires api_token and deployment_id")
+        
+        logger.info(f"Using DataRobot LLM model {settings.llm.model_name}")
+        config = DataRobotConfig(
+            api_token=settings.llm.datarobot_api_token,
+            endpoint=settings.llm.datarobot_endpoint,
+            deployment_id=settings.llm.datarobot_deployment_id,
+            model_name=settings.llm.model_name
+        )
+        return DataRobotChatModel(config, **kwargs)
     else:
-        raise RuntimeError("Unable to find any supported Large Language Model server. Supported engine name is nvidia-ai-endpoints.")
+        raise RuntimeError("Unable to find any supported Large Language Model server. Supported engine names are nvidia-ai-endpoints, datarobot.")
 
 
 @lru_cache
@@ -218,8 +236,20 @@ def get_embedding_model() -> Embeddings:
         else:
             logger.info(f"Using embedding model {settings.embeddings.model_name} hosted at api catalog")
             return NVIDIAEmbeddings(model=settings.embeddings.model_name, truncate="END")
+    elif settings.embeddings.model_engine == "datarobot":
+        if not all([settings.llm.datarobot_api_token, settings.embeddings.datarobot_embedding_deployment_id]):
+            raise RuntimeError("DataRobot embedding configuration requires api_token and embedding_deployment_id")
+        
+        logger.info(f"Using DataRobot embedding model {settings.embeddings.model_name}")
+        config = DataRobotConfig(
+            api_token=settings.llm.datarobot_api_token,  # Use LLM config for API token
+            endpoint=settings.llm.datarobot_endpoint,    # Use LLM config for endpoint
+            deployment_id=settings.embeddings.datarobot_embedding_deployment_id,
+            model_name=settings.embeddings.model_name
+        )
+        return DataRobotEmbeddings(config)
     else:
-        raise RuntimeError("Unable to find any supported embedding model. Supported engine is huggingface and nvidia-ai-endpoints.")
+        raise RuntimeError("Unable to find any supported embedding model. Supported engines are huggingface, nvidia-ai-endpoints, and datarobot.")
 
 @lru_cache
 def get_ranking_model() -> BaseDocumentCompressor:
@@ -241,8 +271,21 @@ def get_ranking_model() -> BaseDocumentCompressor:
             elif settings.ranking.model_name:
                 logger.info(f"Using ranking model {settings.ranking.model_name} hosted at api catalog")
                 return NVIDIARerank(model=settings.ranking.model_name, top_n=settings.retriever.top_k, truncate="END")
+        elif settings.ranking.model_engine == "datarobot":
+            if not all([settings.llm.datarobot_api_token, settings.ranking.datarobot_rerank_deployment_id]):
+                logger.warning("DataRobot reranking configuration requires api_token and rerank_deployment_id")
+                return None
+            
+            logger.info(f"Using DataRobot reranking model {settings.ranking.model_name}")
+            config = DataRobotConfig(
+                api_token=settings.llm.datarobot_api_token,  # Use LLM config for API token
+                endpoint=settings.llm.datarobot_endpoint,    # Use LLM config for endpoint
+                deployment_id=settings.ranking.datarobot_rerank_deployment_id,
+                model_name=settings.ranking.model_name
+            )
+            return DataRobotRerank(config, top_n=settings.retriever.top_k)
         else:
-            logger.warning("Unable to find any supported ranking model. Supported engine is nvidia-ai-endpoints.")
+            logger.warning("Unable to find any supported ranking model. Supported engines are nvidia-ai-endpoints and datarobot.")
     except Exception as e:
         logger.error(f"An error occurred while initializing ranking_model: {e}")
     return None

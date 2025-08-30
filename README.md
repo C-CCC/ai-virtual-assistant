@@ -72,13 +72,26 @@ The AI virtual assistant for customer service NIM Agent Blueprint, powered by NV
 
 ## Software components
 
-* NVIDIA NIM microservices
-   * Response Generation (Inference)
-      * [NIM of meta/llama-3.3-70b-instruct](https://build.nvidia.com/meta/llama-3_3-70b-instruct)
-      * [NIM of nvidia/llama-3.2-nv-embedqa-1b-v2](https://build.nvidia.com/nvidia/llama-3_2-nv-embedqa-1b-v2)
-      * [NIM of nvidia/llama-3.2-nv-rerankqa-1b-v2](https://build.nvidia.com/nvidia/llama-3_2-nv-rerankqa-1b-v2)
-   * [Synthetic Data Generation](./notebooks/synthetic_data_generation.ipynb) for reference
-      * [NIM of Nemotron4-340B](nvidia/nemotron-4-340b-instruct)
+### **AI Model Services**
+
+This system supports multiple AI model providers:
+
+#### **NVIDIA NIM microservices (Default)**
+* Response Generation (Inference)
+  * [NIM of meta/llama-3.3-70b-instruct](https://build.nvidia.com/meta/llama-3_3-70b-instruct)
+  * [NIM of nvidia/llama-3.2-nv-embedqa-1b-v2](https://build.nvidia.com/nvidia/llama-3_2-nv-embedqa-1b-v2)
+  * [NIM of nvidia/llama-3.2-nv-rerankqa-1b-v2](https://build.nvidia.com/nvidia/llama-3_2-nv-rerankqa-1b-v2)
+* [Synthetic Data Generation](./notebooks/synthetic_data_generation.ipynb) for reference
+  * [NIM of Nemotron4-340B](nvidia/nemotron-4-340b-instruct)
+
+#### **DataRobot Endpoints (Alternative)**
+* **LLM Inference**: DataRobot deployment for text generation
+* **Embeddings**: DataRobot deployment for vector embeddings  
+* **Reranking**: DataRobot deployment for document reranking
+
+**See [DataRobot Migration Guide](docs/DATAROBOT_MIGRATION.md) for setup instructions.**
+
+### **Core Components**
 * Orchestrator Agent - LangGraph based
 * Text Retrievers - LangChain
 * Structured Data (CSV) Ingestion - Postgres Database
@@ -187,6 +200,43 @@ The blueprint includes a robust set of APIs, some of which are explicitly design
 In summary, this NVIDIA NIM Agent Blueprint offers a comprehensive solution for building intelligent, generative AI-powered virtual assistants for customer service, leveraging structured and unstructured data to deliver personalized and efficient support. It includes all necessary tools and guidance to deploy, monitor, and continually improve the solution in real-world environments.
 
 ## Getting started
+
+### **🚀 Quick Start Options**
+
+Choose your preferred deployment method:
+
+#### **Option 1: DataRobot Codespaces (Recommended for DataRobot Users)**
+```bash
+# Clone in your DataRobot Codespace
+git clone https://github.com/your-username/ai-virtual-assistant.git
+cd ai-virtual-assistant
+
+# Run automated setup
+./deploy/codespaces-quickstart.sh
+```
+
+**Benefits:**
+- ✅ **Integrated DataRobot services** and authentication
+- ✅ **Pre-configured development environment**
+- ✅ **Automatic port forwarding** for all services
+- ✅ **Built-in CI/CD** capabilities
+
+**📖 See [DataRobot Codespaces Guide](docs/DATAROBOT_CODESPACES.md) for detailed instructions.**
+
+#### **Option 2: Traditional Docker Compose**
+For local development and testing with NVIDIA NIMs or DataRobot endpoints.
+
+#### **Option 3: Kubernetes/Helm**
+For production deployment with full orchestration.
+
+### **📋 Prerequisites by Deployment Method**
+
+| Requirement | Codespaces | Docker Compose | Kubernetes |
+|-------------|------------|----------------|------------|
+| DataRobot Account | ✅ Required | ✅ Required | ✅ Required |
+| Docker | ✅ Included | ✅ Required | ❌ Not needed |
+| Kubernetes | ✅ Included | ❌ Not needed | ✅ Required |
+| GPU Resources | ❌ Not needed | ⚠️ Optional | ⚠️ Optional |
 There are two deployment methods
 1. Docker compose (for a single node deployment)
 2. Helm chart (to deploy on a kubernetes cluster)
