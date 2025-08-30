@@ -103,12 +103,15 @@ def get_prompts() -> Dict:
     """
 
     # default config taking from prompt.yaml
-    default_config_path = os.path.join("./", os.environ.get("EXAMPLE_PATH"), "prompt.yaml")
+    example_path = os.environ.get("EXAMPLE_PATH", "./src/agent")
+    default_config_path = os.path.join(example_path, "prompt.yaml")
     default_config = {}
     if Path(default_config_path).exists():
         with open(default_config_path, 'r') as file:
             logger.info(f"Using prompts config file from: {default_config_path}")
             default_config = yaml.safe_load(file)
+    else:
+        logger.warning(f"Default prompt config not found at: {default_config_path}")
 
     config_file = os.environ.get("PROMPT_CONFIG_FILE", "/prompt.yaml")
 
