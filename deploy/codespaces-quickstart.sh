@@ -1,12 +1,16 @@
 #!/bin/bash
 
-# DataRobot Codespaces Quick Start Script
-# This script is optimized for running in DataRobot Codespaces environment
+# DataRobot Codespaces Docker Quick Start Script
+# This script uses Docker Compose to run services - requires Docker and jq
+# For Python-only deployment (no Docker required), use: deploy/codespaces-python-quickstart.sh
 
 set -e
 
-echo "🚀 DataRobot Codespaces Quick Start for AI Virtual Assistant"
-echo "============================================================"
+echo "🚀 DataRobot Codespaces Docker Quick Start"
+echo "=========================================="
+echo -e "${YELLOW}Note: This script requires Docker and jq${NC}"
+echo -e "${YELLOW}For Python-only deployment, use: ./deploy/codespaces-python-quickstart.sh${NC}"
+echo ""
 
 # Colors for output
 RED='\033[0;31m'
@@ -207,14 +211,39 @@ main() {
 # Check if jq is installed for JSON parsing
 if ! command -v jq &> /dev/null; then
     echo -e "${YELLOW}⚠️  jq not found. Installing...${NC}"
+    
+    # Try different package managers
     if command -v apt-get &> /dev/null; then
+        echo -e "${BLUE}Trying apt-get...${NC}"
         sudo apt-get update && sudo apt-get install -y jq
     elif command -v yum &> /dev/null; then
+        echo -e "${BLUE}Trying yum...${NC}"
         sudo yum install -y jq
     elif command -v brew &> /dev/null; then
+        echo -e "${BLUE}Trying brew...${NC}"
         brew install jq
+    elif command -v apk &> /dev/null; then
+        echo -e "${BLUE}Trying apk...${NC}"
+        sudo apk add jq
     else
-        echo -e "${RED}❌ Cannot install jq automatically. Please install it manually.${NC}"
+        echo -e "${RED}❌ Cannot install jq automatically.${NC}"
+        echo -e "${YELLOW}Please install jq manually using one of these methods:${NC}"
+        echo -e "  • Ubuntu/Debian: ${BLUE}sudo apt-get install jq${NC}"
+        echo -e "  • CentOS/RHEL: ${BLUE}sudo yum install jq${NC}"
+        echo -e "  • macOS: ${BLUE}brew install jq${NC}"
+        echo -e "  • Alpine: ${BLUE}sudo apk add jq${NC}"
+        echo -e "  • Or download from: ${BLUE}https://stedolan.github.io/jq/download/${NC}"
+        echo ""
+        echo -e "${YELLOW}Alternatively, use the Python-only quickstart:${NC}"
+        echo -e "  ${BLUE}./deploy/codespaces-python-quickstart.sh${NC}"
+        exit 1
+    fi
+    
+    # Verify installation
+    if command -v jq &> /dev/null; then
+        echo -e "${GREEN}✅ jq installed successfully${NC}"
+    else
+        echo -e "${RED}❌ jq installation failed${NC}"
         exit 1
     fi
 fi

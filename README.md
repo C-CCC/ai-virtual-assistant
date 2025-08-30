@@ -212,7 +212,7 @@ git clone https://github.com/your-username/ai-virtual-assistant.git
 cd ai-virtual-assistant
 
 # Run automated setup
-./deploy/codespaces-quickstart.sh
+./deploy/codespaces-python-quickstart.sh
 ```
 
 **Benefits:**

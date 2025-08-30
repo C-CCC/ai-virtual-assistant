@@ -291,7 +291,7 @@ docker compose -f deploy/compose/docker-compose-codespaces.yaml down
 docker compose -f deploy/compose/docker-compose-codespaces.yaml down -v
 
 # Rebuild and restart
-./deploy/codespaces-quickstart.sh
+./deploy/codespaces-python-quickstart.sh
 ```
 
 ## 🚀 **Next Steps**
