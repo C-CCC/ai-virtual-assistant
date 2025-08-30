@@ -1,3 +1,4 @@
+
 # DataRobot Codespaces Guide
 
 This guide explains how to use DataRobot Codespaces to build, develop, and deploy the AI Virtual Assistant.
@@ -45,25 +46,30 @@ The Codespace environment automatically detects DataRobot services and provides:
 
 ## 🐳 **Deployment Options in Codespaces**
 
-### **Option 1: Quick Start (Recommended)**
+### **Option 1: Python-Only Quick Start (Recommended for Codespaces)**
 
-Use the automated setup script:
+Use the automated Python-only setup script (no Docker required):
 
 ```bash
-# Run the Codespaces quick start script
-./deploy/codespaces-quickstart.sh
+# Run the Codespaces Python-only quick start script
+./deploy/codespaces-python-quickstart.sh
 ```
 
 This script will:
 - ✅ Check Codespaces environment
+- ✅ Verify Python installation
 - ✅ Prompt for DataRobot configuration
 - ✅ Create environment files
 - ✅ Test DataRobot connectivity
-- ✅ Build and deploy all services
-- ✅ Wait for services to be healthy
-- ✅ Provide service URLs and next steps
+- ✅ Install all Python dependencies
+- ✅ Create service management scripts
+- ✅ Provide clear next steps
 
-### **Option 2: Manual Docker Compose**
+**Perfect for Codespaces where Docker isn't available!**
+
+### **Option 2: Manual Docker Compose (If Docker is Available)**
+
+**Note**: This option requires Docker to be installed and available in your Codespace.
 
 ```bash
 # Create environment file
@@ -125,15 +131,27 @@ Once deployed, access services at:
 
 ## 🔍 **Development Workflow in Codespaces**
 
-### **1. Code Changes**
+### **Python-Only Workflow (Recommended for Codespaces)**
+
+If you're using the Python-only approach (Option 1):
 
 ```bash
 # Make changes to your code
 vim src/agent/server.py
 
-# Test changes
-docker compose -f deploy/compose/docker-compose-codespaces.yaml restart agent-services
+# Restart specific service
+./stop-services.sh
+./start-services.sh
+
+# Or restart individual service
+kill $(cat logs/agent-services.pid)
+cd src/agent && nohup python3 main.py > ../logs/agent-services.log 2>&1 &
+echo $! > ../logs/agent-services.pid
 ```
+
+### **Docker Workflow (If Docker is Available)**
+
+If you have Docker available:
 
 ### **2. Testing**
 
@@ -147,6 +165,23 @@ curl http://localhost:8000/health
 
 ### **3. Debugging**
 
+#### **Python-Only Approach (Recommended)**
+```bash
+# View all service logs
+tail -f logs/*.log
+
+# View specific service logs
+tail -f logs/agent-services.log
+tail -f logs/analytics-services.log
+
+# Check service status
+./check-services.sh
+
+# View real-time logs
+tail -f logs/[service-name].log
+```
+
+#### **Docker Approach (If Available)**
 ```bash
 # View logs
 docker compose -f deploy/compose/docker-compose-codespaces.yaml logs -f
