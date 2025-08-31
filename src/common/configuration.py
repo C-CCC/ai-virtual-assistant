@@ -15,6 +15,7 @@
 
 """The definition of the application configuration."""
 from src.common.configuration_wizard import ConfigWizard, configclass, configfield
+import os
 
 
 @configclass
@@ -58,12 +59,12 @@ class DatabaseConfig(ConfigWizard):
     from dataclasses import field
     name: str = configfield(
         "name",
-        default="postgres", # supports redis, postgres
+        default=os.environ.get("DATABASE_NAME", "postgres"), # supports redis, postgres
         help_txt="The name of database",
     )
     url: str = configfield(
         "url",
-        default="postgres:5432", # for redis `redis:6379`
+        default=os.environ.get("DATABASE_URL", "postgres:5432"), # for redis `redis:6379`
         help_txt="The host of the machine running database",
     )
     config: str = configfield(

@@ -31,11 +31,14 @@ class Datastore:
         if db_name == "postgres":
             print("Using postgres to store conversation history")
             self.database = PostgresClient()
+        elif db_name == "none":
+            print("Using mock database for testing (no persistence)")
+            self.database = MockDatabaseClient()
         # elif db_name == "redis":
         #     print("Using Redis to store conversation history")
         #     self.database = RedisClient()
         else:
-            raise ValueError(f"{db_name} database in not supported. Supported type postgres")
+            raise ValueError(f"{db_name} database in not supported. Supported types: postgres, none")
 
     def store_conversation(self, session_id: str, user_id: Optional[str], conversation_history: list, last_conversation_time: str, start_conversation_time: str):
         """store conversation for given details"""
@@ -46,8 +49,41 @@ class Datastore:
         self.database.fetch_conversation(session_id)
 
     def delete_conversation(self, session_id: str):
-        """Delete conversation for given session id"""
+        """delete conversation for given session id"""
         self.database.delete_conversation(session_id)
 
     def is_session(self, session_id: str) -> bool:
+        """check if session exists"""
         return self.database.is_session(session_id)
+
+
+class MockDatabaseClient:
+    """Mock database client for testing without external dependencies"""
+    
+    def __init__(self):
+        self.conversations = {}
+        print("Mock database initialized - no persistence")
+    
+    def store_conversation(self, session_id: str, user_id: Optional[str], conversation_history: list, last_conversation_time: str, start_conversation_time: str):
+        """Mock store conversation"""
+        self.conversations[session_id] = {
+            "user_id": user_id,
+            "conversation_history": conversation_history,
+            "last_conversation_time": last_conversation_time,
+            "start_conversation_time": start_conversation_time
+        }
+        print(f"Mock: Stored conversation for session {session_id}")
+    
+    def fetch_conversation(self, session_id: str):
+        """Mock fetch conversation"""
+        return self.conversations.get(session_id, None)
+    
+    def delete_conversation(self, session_id: str):
+        """Mock delete conversation"""
+        if session_id in self.conversations:
+            del self.conversations[session_id]
+            print(f"Mock: Deleted conversation for session {session_id}")
+    
+    def is_session(self, session_id: str) -> bool:
+        """Mock check if session exists"""
+        return session_id in self.conversations
