@@ -59,12 +59,14 @@ class DatabaseConfig(ConfigWizard):
     from dataclasses import field
     name: str = configfield(
         "name",
-        default="postgres", # supports redis, postgres
+        default=os.environ.get("DATABASE_NAME", "postgres"), # supports inmemory, postgres
+        env=True,
         help_txt="The name of database",
     )
     url: str = configfield(
         "url",
-        default="postgres:5432", # for redis `redis:6379`
+        default=os.environ.get("DATABASE_URL", "postgres:5432"), # for redis `redis:6379`
+        env=True,
         help_txt="The host of the machine running database",
     )
     config: str = configfield(
@@ -111,12 +113,12 @@ class CacheConfig(ConfigWizard):
     from dataclasses import field
     name: str = configfield(
         "name",
-        default=os.environ.get("CACHE_NAME", "redis"), # supports redis, inmemory
-        help_txt="The name of cache",
+        default="redis", # supports redis
+        help_txt="The name of vector store",
     )
     url: str = configfield(
         "url",
-        default=os.environ.get("CACHE_URL", "redis:6379"), # for redis `redis:6379`
+        default="redis:6379", # for redis `redis:6379`
         help_txt="The host of the machine running cache",
     )
     config: str = configfield(
